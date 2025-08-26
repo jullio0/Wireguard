@@ -1,0 +1,111 @@
+# 🌐 Experimento VPN Site-to-Site com WireGuard
+
+Este projeto demonstra a configuração de uma VPN site-to-site utilizando o **WireGuard** com o algoritmo de criptografia **ChaCha20**. O ambiente foi montado em duas máquinas Linux Mint (Cliente e Servidor), com testes de conectividade e análise de tráfego.
+
+---
+
+## 📌 Ambiente
+
+- **Cliente:** `192.168.150.136 (Linux Mint)`
+- **Servidor:** `192.168.150.135 (Linux Mint)`
+
+---
+
+## ⚙️ Requisitos
+
+Em **ambas as máquinas**:
+
+```bash
+sudo apt update
+sudo apt install openssh-server iperf3 -y
+No servidor:
+
+bash
+Copiar
+Editar
+sudo apt install wireshark -y
+🔑 Configuração do WireGuard
+1. Instalar o WireGuard
+bash
+Copiar
+Editar
+sudo apt install wireguard -y
+2. Gerar chaves
+No servidor:
+
+bash
+Copiar
+Editar
+wg genkey | tee server_private.key | wg pubkey > server_public.key
+No cliente:
+
+bash
+Copiar
+Editar
+wg genkey | tee client_private.key | wg pubkey > client_public.key
+scp client_public.key ifpb@192.168.150.135:/home/
+📝 Arquivo de configuração
+Servidor: /etc/wireguard/wg0.conf
+ini
+Copiar
+Editar
+[Interface]
+PrivateKey = <conteúdo de server_private.key>
+Address = 10.20.20.1/24
+ListenPort = 51820
+
+[Peer]
+PublicKey = <conteúdo de client_public.key>
+AllowedIPs = 10.20.20.2/32
+Endpoint = 192.168.150.X:51820
+Cliente: /etc/wireguard/wg0.conf
+ini
+Copiar
+Editar
+[Interface]
+PrivateKey = <conteúdo de client_private.key>
+Address = 10.20.20.2/24
+
+[Peer]
+PublicKey = <conteúdo de server_public.key>
+Endpoint = 192.168.150.117:51820
+AllowedIPs = 10.20.20.1/32
+PersistentKeepalive = 25
+🚀 Ativando a VPN
+bash
+Copiar
+Editar
+sudo wg-quick up wg0
+🧪 Testes
+No servidor:
+Capturar tráfego:
+
+bash
+Copiar
+Editar
+sudo tcpdump -i wg0 -w wireguard-teste.pcap
+No cliente:
+Testar desempenho e conectividade:
+
+bash
+Copiar
+Editar
+iperf3 -c 10.20.20.1 -u -b 10M -l 1000 -t 35
+ping -c 50 10.20.20.1
+Encerrar captura:
+
+mathematica
+Copiar
+Editar
+Ctrl + C
+Abrir o .pcap no Wireshark para análise.
+
+🛑 Encerrando o iperf3
+bash
+Copiar
+Editar
+sudo pkill iperf3
+📚 Referências
+Documentação oficial do WireGuard
+
+Linux Mint
